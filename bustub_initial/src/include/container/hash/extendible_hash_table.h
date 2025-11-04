@@ -6,196 +6,87 @@
 //
 // Identification: src/include/container/hash/extendible_hash_table.h
 //
-// Copyright (c) 2015-2021, Carnegie Mellon University Database Group
+// Copyright (c) 2022, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
-/**
- * extendible_hash_table.h
- *
- * Implementation of in-memory hash table using extendible hashing
- */
 
 #pragma once
 
 #include <list>
-#include <memory>
-#include <mutex>  // NOLINT
-#include <utility>
+#include <mutex>
 #include <vector>
-
-#include "container/hash/hash_table.h"
+#include <utility>
 
 namespace bustub {
 
-/**
- * ExtendibleHashTable implements a hash table using the extendible hashing algorithm.
- * @tparam K key type
- * @tparam V value type
- */
 template <typename K, typename V>
-class ExtendibleHashTable : public HashTable<K, V> {
- public:
-  /**
-   *
-   * TODO(P1): Add implementation
-   *
-   * @brief Create a new ExtendibleHashTable.
-   * @param bucket_size: fixed size for each bucket
-   */
-  explicit ExtendibleHashTable(size_t bucket_size);
-
-  /**
-   * @brief Get the global depth of the directory.
-   * @return The global depth of the directory.
-   */
-  auto GetGlobalDepth() const -> int;
-
-  /**
-   * @brief Get the local depth of the bucket that the given directory index points to.
-   * @param dir_index The index in the directory.
-   * @return The local depth of the bucket.
-   */
-  auto GetLocalDepth(int dir_index) const -> int;
-
-  /**
-   * @brief Get the number of buckets in the directory.
-   * @return The number of buckets in the directory.
-   */
-  auto GetNumBuckets() const -> int;
-
-  /**
-   *
-   * TODO(P1): Add implementation
-   *
-   * @brief Find the value associated with the given key.
-   *
-   * Use IndexOf(key) to find the directory index the key hashes to.
-   *
-   * @param key The key to be searched.
-   * @param[out] value The value associated with the key.
-   * @return True if the key is found, false otherwise.
-   */
-  auto Find(const K &key, V &value) -> bool override;
-
-  /**
-   *
-   * TODO(P1): Add implementation
-   *
-   * @brief Insert the given key-value pair into the hash table.
-   * If a key already exists, the value should be updated.
-   * If the bucket is full and can't be inserted, do the following steps before retrying:
-   *    1. If the local depth of the bucket is equal to the global depth,
-   *        increment the global depth and double the size of the directory.
-   *    2. Increment the local depth of the bucket.
-   *    3. Split the bucket and redistribute directory pointers & the kv pairs in the bucket.
-   *
-   * @param key The key to be inserted.
-   * @param value The value to be inserted.
-   */
-  void Insert(const K &key, const V &value) override;
-
-  /**
-   *
-   * TODO(P1): Add implementation
-   *
-   * @brief Given the key, remove the corresponding key-value pair in the hash table.
-   * Shrink & Combination is not required for this project
-   * @param key The key to be deleted.
-   * @return True if the key exists, false otherwise.
-   */
-  auto Remove(const K &key) -> bool override;
-
-  /**
-   * Bucket class for each hash table bucket that the directory points to.
-   */
+class ExtendibleHashTable {
+ private:
+  // 嵌套桶类：存储KV对，维护局部深度和容量
   class Bucket {
+    friend class ExtendibleHashTable<K, V>;  // 允许外部类访问私有成员
+    using KVPair = std::pair<K, V>;
+    std::list<KVPair> kv_pairs_;  // 存储KV对（链表便于插入删除）
+    size_t max_size_;             // 桶的最大容量
+    int local_depth_;             // 桶的局部深度
+
    public:
-    explicit Bucket(size_t size, int depth = 0);
+    using iterator = typename std::list<KVPair>::iterator;
+    using const_iterator = typename std::list<KVPair>::const_iterator;
 
-    /** @brief Check if a bucket is full. */
-    inline auto IsFull() const -> bool { return list_.size() == size_; }
+    Bucket(size_t max_size, int local_depth) : max_size_(max_size), local_depth_(local_depth) {}
 
-    /** @brief Get the local depth of the bucket. */
-    inline auto GetDepth() const -> int { return depth_; }
+    // 查找键：找到则赋值value并返回true
+    bool Find(const K &key, V &value);
+    // 删除键：找到则删除并返回true
+    bool Remove(const K &key);
+    // 插入键值对：存在则覆盖，满则返回false
+    bool Insert(const K &key, const V &value);
 
-    /** @brief Increment the local depth of a bucket. */
-    inline void IncrementDepth() { depth_++; }
+    // 访问器
+    int GetLocalDepth() const { return local_depth_; }
+    void SetLocalDepth(int depth) { local_depth_ = depth; }
+    size_t GetCurrentSize() const { return kv_pairs_.size(); }
+    bool IsFull() const { return kv_pairs_.size() >= max_size_; }
 
-    inline auto GetItems() -> std::list<std::pair<K, V>> & { return list_; }
-
-    /**
-     *
-     * TODO(P1): Add implementation
-     *
-     * @brief Find the value associated with the given key in the bucket.
-     * @param key The key to be searched.
-     * @param[out] value The value associated with the key.
-     * @return True if the key is found, false otherwise.
-     */
-    auto Find(const K &key, V &value) -> bool;
-
-    /**
-     *
-     * TODO(P1): Add implementation
-     *
-     * @brief Given the key, remove the corresponding key-value pair in the bucket.
-     * @param key The key to be deleted.
-     * @return True if the key exists, false otherwise.
-     */
-    auto Remove(const K &key) -> bool;
-
-    /**
-     *
-     * TODO(P1): Add implementation
-     *
-     * @brief Insert the given key-value pair into the bucket.
-     *      1. If a key already exists, the value should be updated.
-     *      2. If the bucket is full, do nothing and return false.
-     * @param key The key to be inserted.
-     * @param value The value to be inserted.
-     * @return True if the key-value pair is inserted, false otherwise.
-     */
-    auto Insert(const K &key, const V &value) -> bool;
-
-   private:
-    // TODO(student): You may add additional private members and helper functions
-    size_t size_;
-    int depth_;
-    std::list<std::pair<K, V>> list_;
+    // 迭代器接口（用于拆分时重新分配KV对）
+    iterator begin() { return kv_pairs_.begin(); }
+    iterator end() { return kv_pairs_.end(); }
   };
 
+  // 哈希表核心成员
+  std::vector<Bucket *> dir_;          // 目录：存储桶指针
+  int global_depth_;                   // 全局深度
+  size_t bucket_size_;                 // 每个桶的最大容量
+  int num_buckets_;                    // 桶的总数量（去重后）
+  mutable std::mutex latch_;           // 互斥锁（保证线程安全）
+
+  // 辅助函数：拆分桶
+  void SplitBucket(Bucket *bucket);
+  // 计算键对应的目录索引（已在cpp中实现）
+  size_t IndexOf(const K &key);
+
+ public:
+  // 构造函数
+  explicit ExtendibleHashTable(size_t bucket_size);
+  // 析构函数（释放桶内存）
+  ~ExtendibleHashTable();
+
+  // 核心操作
+  bool Find(const K &key, V &value);
+  bool Remove(const K &key);
+  void Insert(const K &key, const V &value);
+
+  // 元数据查询（已在cpp中实现加锁）
+  int GetGlobalDepth() const;
+  int GetLocalDepth(int dir_index) const;
+  int GetNumBuckets() const;
+
  private:
-  // TODO(student): You may add additional private members and helper functions and remove the ones
-  // you don't need.
-
-  int global_depth_{0};  // The global depth of the directory
-  size_t bucket_size_;   // The size of a bucket
-  int num_buckets_{1};   // The number of buckets in the hash table
-  mutable std::mutex latch_;
-  std::vector<std::shared_ptr<Bucket>> dir_;  // The directory of the hash table
-
-  // The following functions are completely optional, you can delete them if you have your own ideas.
-
-  /**
-   * @brief Redistribute the kv pairs in a full bucket.
-   * @param bucket The bucket to be redistributed.
-   */
-  auto RedistributeBucket(std::shared_ptr<Bucket> bucket) -> void;
-
-  /*****************************************************************
-   * Must acquire latch_ first before calling the below functions. *
-   *****************************************************************/
-
-  /**
-   * @brief For the given key, return the entry index in the directory where the key hashes to.
-   * @param key The key to be hashed.
-   * @return The entry index in the directory.
-   */
-  auto IndexOf(const K &key) -> size_t;
-
-  auto GetGlobalDepthInternal() const -> int;
-  auto GetLocalDepthInternal(int dir_index) const -> int;
-  auto GetNumBucketsInternal() const -> int;
+  // 内部元数据查询（无锁，供加锁函数调用）
+  int GetGlobalDepthInternal() const;
+  int GetLocalDepthInternal(int dir_index) const;
+  int GetNumBucketsInternal() const;
 };
 
 }  // namespace bustub
