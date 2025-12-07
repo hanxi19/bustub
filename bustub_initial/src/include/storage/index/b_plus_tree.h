@@ -77,6 +77,39 @@ class BPlusTree {
  private:
   void UpdateRootPageId(int insert_record = 0);
 
+  // 补充：从根节点开始查找叶子页
+  // left_most=true 时一路走到最左叶子（用于 Begin），否则按照给定 key 做查找
+  auto FindLeafPage(const KeyType &key, bool left_most, Transaction *transaction) -> LeafPage *;
+
+  // 补充：当前树为空时，创建一棵只包含一个叶子页的新树，并插入第一条 (key, value)
+  void StartNewTree(const KeyType &key, const ValueType &value);
+
+  // 补充：在非空 B+Tree 中，将 (key, value) 插入合适的叶子页；若 key 已存在返回 false
+  auto InsertIntoLeaf(const KeyType &key, const ValueType &value, Transaction *transaction) -> bool;
+
+  // 补充：当节点已满时，将其分裂为两个节点，返回新分裂出来的节点指针
+  template <typename N>
+  auto Split(N *node) -> N *;
+
+  // 补充：在 old_node 分裂出 new_node 后，把分裂键插入父节点；必要时父节点也可能继续分裂
+  template <typename N>
+  void InsertIntoParent(N *old_node, const KeyType &key, N *new_node, Transaction *transaction);
+
+  // 补充：删除后若节点小于最小容量，尝试与兄弟结点合并或重分配，返回是否树结构发生了变化
+  template <typename N>
+  auto CoalesceOrRedistribute(N *node, Transaction *transaction) -> bool;
+
+  // 补充：将 node 与 neighbor_node 进行真正的合并（由 parent 和 index 决定左右关系）
+  template <typename N>
+  auto Coalesce(N *neighbor_node, N *node, InternalPage *parent, int index, Transaction *transaction) -> bool;
+
+  // 补充：在不合并的情况下，从 neighbor_node 借一个键值对重分配给 node
+  template <typename N>
+  void Redistribute(N *neighbor_node, N *node, int index);
+
+  // 补充：在删除导致根节点过小或为空时，调整 root_page_id_（可能降低树高）
+  auto AdjustRoot(BPlusTreePage *old_root_node) -> bool;
+
   /* Debug Routines for FREE!! */
   void ToGraph(BPlusTreePage *page, BufferPoolManager *bpm, std::ofstream &out) const;
 

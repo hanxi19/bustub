@@ -50,6 +50,33 @@ class BPlusTreeLeafPage : public BPlusTreePage {
   void SetNextPageId(page_id_t next_page_id);
   auto KeyAt(int index) const -> KeyType;
 
+  // 补充：返回指定下标处的键值对引用，便于在 B+Tree 中遍历或调试
+  auto GetItem(int index) const -> const MappingType &;
+
+  // 补充：在当前叶子页中查找 key，返回第一个 >= key 的下标（用于插入位置或 Begin(key)）
+  auto KeyIndex(const KeyType &key, const KeyComparator &comparator) const -> int;
+
+  // 补充：在叶子页中查找给定 key 对应的 value，成功返回 true 并写入 value
+  auto Lookup(const KeyType &key, ValueType &value, const KeyComparator &comparator) const -> bool;
+
+  // 补充：按有序位置插入 (key, value)，返回插入后的 size
+  auto Insert(const KeyType &key, const ValueType &value, const KeyComparator &comparator) -> int;
+
+  // 补充：按 key 删除记录，返回删除后的 size（若 key 不存在则 size 不变）
+  auto RemoveAndDeleteRecord(const KeyType &key, const KeyComparator &comparator) -> int;
+
+  // 补充：在分裂时，将当前页后一半元素移动到 recipient 叶子页
+  void MoveHalfTo(BPlusTreeLeafPage *recipient);
+
+  // 补充：在合并时，将当前页所有元素移动到 recipient 叶子页末尾
+  void MoveAllTo(BPlusTreeLeafPage *recipient);
+
+  // 补充：在重分配时，将当前页的第一个元素移动到 recipient 的末尾
+  void MoveFirstToEndOf(BPlusTreeLeafPage *recipient);
+
+  // 补充：在重分配时，将当前页的最后一个元素移动到 recipient 的开头
+  void MoveLastToFrontOf(BPlusTreeLeafPage *recipient);
+
  private:
   page_id_t next_page_id_;
   // Flexible array member for page data.

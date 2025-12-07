@@ -80,7 +80,9 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id) {
   std::lock_guard<std::mutex> lock(latch_);
 
   // 检查帧ID有效性（超出替换器大小为无效）
-  BUSTUB_ASSERT(frame_id < replacer_size_, "RecordAccess failed: invalid frame_id (out of range)");
+  // 补充：将 frame_id 转为 size_t 再比较，避免有符号/无符号比较产生编译警告
+  BUSTUB_ASSERT(static_cast<size_t>(frame_id) < replacer_size_,
+                "RecordAccess failed: invalid frame_id (out of range)");
 
   // 获取或创建帧元数据
   auto &frame_info = frame_map_[frame_id];
@@ -104,7 +106,9 @@ void LRUKReplacer::SetEvictable(frame_id_t frame_id, bool set_evictable) {
   std::lock_guard<std::mutex> lock(latch_);
 
   // 检查帧ID有效性
-  BUSTUB_ASSERT(frame_id < replacer_size_, "SetEvictable failed: invalid frame_id (out of range)");
+  // 补充：统一为无符号比较，避免有符号/无符号比较告警
+  BUSTUB_ASSERT(static_cast<size_t>(frame_id) < replacer_size_,
+                "SetEvictable failed: invalid frame_id (out of range)");
 
   // 帧不存在则直接返回（无需修改）
   auto it = frame_map_.find(frame_id);
@@ -137,7 +141,8 @@ void LRUKReplacer::Remove(frame_id_t frame_id) {
   std::lock_guard<std::mutex> lock(latch_);
 
   // 检查帧ID有效性
-  BUSTUB_ASSERT(frame_id < replacer_size_, "Remove failed: invalid frame_id (out of range)");
+  // 补充：统一为无符号比较，避免有符号/无符号比较告警
+  BUSTUB_ASSERT(static_cast<size_t>(frame_id) < replacer_size_, "Remove failed: invalid frame_id (out of range)");
 
   // 帧不存在则直接返回
   auto it = frame_map_.find(frame_id);
