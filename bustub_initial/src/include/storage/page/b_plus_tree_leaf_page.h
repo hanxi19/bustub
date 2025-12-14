@@ -22,21 +22,21 @@ namespace bustub {
 #define LEAF_PAGE_SIZE ((BUSTUB_PAGE_SIZE - LEAF_PAGE_HEADER_SIZE) / sizeof(MappingType))
 
 /**
- * Store indexed key and record id(record id = page id combined with slot id,
- * see include/common/rid.h for detailed implementation) together within leaf
- * page. Only support unique key.
+ * 在叶子页中存储「索引键」和「记录 ID（Record ID）」的组合。
+ * 其中 Record ID = page_id + slot_id，用于唯一定位底层表中的一条记录
+ * （具体实现见 include/common/rid.h）。B+Tree 这里只支持唯一键（unique key）。
  *
- * Leaf page format (keys are stored in order):
+ * 叶子页的数据格式（keys 按顺序存储）：
  *  ----------------------------------------------------------------------
- * | HEADER | KEY(1) + RID(1) | KEY(2) + RID(2) | ... | KEY(n) + RID(n)
+ * | HEADER | KEY(1) + RID(1) | KEY(2) + RID(2) | ... | KEY(n) + RID(n) |
  *  ----------------------------------------------------------------------
  *
- *  Header format (size in byte, 28 bytes in total):
+ *  叶子页头部格式（总共 28 字节）：
  *  ---------------------------------------------------------------------
  * | PageType (4) | LSN (4) | CurrentSize (4) | MaxSize (4) |
  *  ---------------------------------------------------------------------
  *  -----------------------------------------------
- * | ParentPageId (4) | PageId (4) | NextPageId (4)
+ * | ParentPageId (4) | PageId (4) | NextPageId (4) |
  *  -----------------------------------------------
  */
 INDEX_TEMPLATE_ARGUMENTS

@@ -20,14 +20,12 @@ namespace bustub {
 #define INTERNAL_PAGE_HEADER_SIZE 24
 #define INTERNAL_PAGE_SIZE ((BUSTUB_PAGE_SIZE - INTERNAL_PAGE_HEADER_SIZE) / (sizeof(MappingType)))
 /**
- * Store n indexed keys and n+1 child pointers (page_id) within internal page.
- * Pointer PAGE_ID(i) points to a subtree in which all keys K satisfy:
- * K(i) <= K < K(i+1).
- * NOTE: since the number of keys does not equal to number of child pointers,
- * the first key always remains invalid. That is to say, any search/lookup
- * should ignore the first key.
+ * 在内部页中存储 n 个索引键和 n+1 个子指针（page_id）。
+ * 指针 PAGE_ID(i) 指向的子树中，所有键 K 满足：K(i) <= K < K(i+1)。
+ * 注意：由于键的数量与子指针数量不相等，第 0 个键始终是“无效键”，
+ *      换句话说，在任何查找 / 搜索逻辑中都应忽略第一个键。
  *
- * Internal page format (keys are stored in increasing order):
+ * 内部页的数据格式（keys 按递增顺序存储）：
  *  --------------------------------------------------------------------------
  * | HEADER | KEY(1)+PAGE_ID(1) | KEY(2)+PAGE_ID(2) | ... | KEY(n)+PAGE_ID(n) |
  *  --------------------------------------------------------------------------
