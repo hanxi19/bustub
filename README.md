@@ -9,6 +9,7 @@
 
 <img width="775" height="268" alt="image" src="https://github.com/user-attachments/assets/3e224353-10b9-4b94-82a1-92cad96126b9" />
 <img width="783" height="240" alt="image" src="https://github.com/user-attachments/assets/17ce13f1-56f6-4160-b9ec-9a6f324b50be" />
+<img width="936" height="547" alt="image" src="https://github.com/user-attachments/assets/f138973f-29ec-4708-9768-a975b1519c3c" />
 
 ## checkpoint2
 <img width="738" height="405" alt="f72c7014f44cf978bec91d8678b43664" src="https://github.com/user-attachments/assets/c78710cf-179a-48f6-8496-16ed80e96d5d" />
